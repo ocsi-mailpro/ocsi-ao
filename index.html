@@ -3,67 +3,505 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AOFinder - Recherche d'Appels d'Offres</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<title>AOFinder — Appels d'Offres IT</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-:root { --bg: #0a0e1a; --surface: #151b2e; --surface-light: #1e2740; --border: rgba(99, 179, 237, 0.15); --text: #e8f1ff; --text-dim: #94a9c9; --accent: #3b82f6; --success: #10b981; }
-body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
-.container { max-width: 1400px; margin: 0 auto; padding: 24px; }
-.header { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05)); border: 1px solid var(--border); border-radius: 16px; padding: 32px; margin-bottom: 24px; text-align: center; }
-.logo { font-size: 2.5em; font-weight: 800; background: linear-gradient(135deg, #3b82f6, #2563eb); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; }
-.subtitle { color: var(--text-dim); font-size: 1.1em; margin-bottom: 8px; }
-.sources { color: var(--text-dim); font-size: 0.9em; }
-.filters { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 16px; }
-.filter-group label { display: block; font-size: 0.85em; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; }
-input, select { width: 100%; background: var(--surface-light); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: 10px 12px; font-family: 'Inter', sans-serif; font-size: 0.95em; }
-input:focus, select:focus { outline: none; border-color: var(--accent); }
-input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { display: none; }
-.btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.95em; transition: all 0.2s; }
-.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-.btn-outline:hover { border-color: var(--accent); }
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
-.stat-value { font-size: 2em; font-weight: 800; color: var(--accent); }
-.stat-label { font-size: 0.85em; color: var(--text-dim); text-transform: uppercase; }
-.ao-list { display: flex; flex-direction: column; gap: 16px; }
-.ao-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 12px; padding: 20px; transition: all 0.3s; }
-.ao-card:hover { transform: translateX(4px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
-.ao-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
-.ao-title { font-size: 1.2em; font-weight: 700; margin-bottom: 6px; }
-.ao-client { color: var(--text-dim); font-size: 0.9em; }
-.ao-badge { background: var(--success); color: white; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 700; white-space: nowrap; height: fit-content; }
-.ao-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; padding: 16px; background: var(--surface-light); border-radius: 8px; margin-bottom: 12px; }
-.meta-item { font-size: 0.9em; }
-.meta-label { color: var(--text-dim); font-size: 0.75em; text-transform: uppercase; margin-bottom: 2px; }
-.meta-value { font-weight: 600; }
-.ao-desc { color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
-.ao-link { display: inline-block; color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.9em; }
-.ao-link:hover { text-decoration: underline; }
-.toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 24px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 1000; }
-.toast.show { transform: translateY(0); opacity: 1; }
+
+:root {
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.06);
+  --text-primary: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --text-tertiary: #6e6e73;
+  --accent: #0071e3;
+  --accent-hover: #0077ed;
+  --success: #30d158;
+  --warning: #ff9f0a;
+  --danger: #ff453a;
+  --blur: blur(40px);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Animated gradient background */
+.bg-gradient {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  width: 200%;
+  height: 200vh;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 113, 227, 0.08) 0%, transparent 50%),
+              radial-gradient(circle at 80% 20%, rgba(48, 209, 88, 0.06) 0%, transparent 40%),
+              radial-gradient(circle at 20% 80%, rgba(255, 159, 10, 0.05) 0%, transparent 40%);
+  animation: gradientShift 20s ease infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+@keyframes gradientShift {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-10%, -10%) rotate(2deg); }
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero Section - Apple style */
+.hero {
+  text-align: center;
+  padding: 120px 40px 80px;
+  position: relative;
+}
+
+.hero h1 {
+  font-size: 72px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #f5f5f7 0%, #a1a1a6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fadeInUp 0.8s ease;
+}
+
+.hero p {
+  font-size: 24px;
+  color: var(--text-secondary);
+  font-weight: 400;
+  margin-bottom: 12px;
+  animation: fadeInUp 0.8s ease 0.1s both;
+}
+
+.sources-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 14px;
+  color: var(--text-tertiary);
+  backdrop-filter: var(--blur);
+  animation: fadeInUp 0.8s ease 0.2s both;
+}
+
+.live-indicator {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--success);
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* Glassmorphism filters */
+.filters {
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 32px;
+  margin-bottom: 40px;
+  animation: fadeInUp 0.8s ease 0.3s both;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+input, select {
+  width: 100%;
+  background: var(--surface-active);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+
+input:focus, select:focus {
+  outline: none;
+  background: var(--surface-hover);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+input::placeholder {
+  color: var(--text-tertiary);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  display: none;
+}
+
+.btn {
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 113, 227, 0.3);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-hover);
+}
+
+/* Stats cards - Apple style */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-bottom: 48px;
+  animation: fadeInUp 0.8s ease 0.4s both;
+}
+
+.stat-card {
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--success));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.stat-card:hover::before {
+  opacity: 1;
+}
+
+.stat-value {
+  font-size: 48px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* AO Cards - Ultra premium */
+.ao-list {
+  display: grid;
+  gap: 24px;
+}
+
+.ao-card {
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease both;
+}
+
+.ao-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--accent), var(--success));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.ao-card:hover {
+  transform: translateX(8px) translateY(-4px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.ao-card:hover::after {
+  opacity: 1;
+}
+
+.ao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 20px;
+}
+
+.ao-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.ao-client {
+  color: var(--text-secondary);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge {
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-source {
+  background: linear-gradient(135deg, rgba(0, 113, 227, 0.15), rgba(48, 209, 88, 0.15));
+  color: var(--accent);
+  border: 1px solid rgba(0, 113, 227, 0.3);
+}
+
+.ao-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px;
+  padding: 20px;
+  background: var(--surface-active);
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.meta-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ao-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+.ao-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+
+.ao-link:hover {
+  gap: 12px;
+  color: var(--accent-hover);
+}
+
+.loading {
+  text-align: center;
+  padding: 100px 40px;
+  color: var(--text-secondary);
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--surface-active);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 24px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty {
+  text-align: center;
+  padding: 100px 40px;
+  color: var(--text-secondary);
+}
+
+.empty-icon {
+  font-size: 80px;
+  margin-bottom: 24px;
+  opacity: 0.3;
+}
+
+.toast {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  background: var(--surface);
+  backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px 28px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  transform: translateY(120px);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero h1 { font-size: 48px; }
+  .hero p { font-size: 20px; }
+  .container { padding: 0 20px; }
+  .filters { padding: 24px; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .ao-header { flex-direction: column; }
+  .stat-value { font-size: 36px; }
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div class="logo">🎯 AOFinder</div>
-    <div class="subtitle">Recherche automatique d'Appels d'Offres</div>
-    <div class="sources">📡 BOAMP • JOUE • Place des Entreprises • Data.gouv.fr • Marchéonline • Francemarché</div>
+
+<div class="bg-gradient"></div>
+
+<div class="hero">
+  <h1>AOFinder</h1>
+  <p>Tous les appels d'offres informatique en temps réel</p>
+  <div class="sources-badge">
+    <div class="live-indicator"></div>
+    <span>BOAMP · JOUE · Place des Entreprises · Data.gouv.fr · Marchéonline · Francemarché</span>
   </div>
+</div>
+
+<div class="container">
   <div class="filters">
     <div class="filter-grid">
       <div class="filter-group">
-        <label>🔍 Secteur</label>
+        <label>Secteur</label>
         <select id="sector" onchange="applyFilters()">
           <option value="">Tous les secteurs</option>
           <option value="cloud">☁️ Cloud & Hébergement</option>
           <option value="cybersecurite">🔒 Cybersécurité</option>
-          <option value="developpement">💻 Développement & Web</option>
-          <option value="infrastructure">🖥️ Infrastructure IT</option>
-          <option value="reseau">🌐 Réseau & Télécom</option>
-          <option value="erp">📊 ERP & Logiciels</option>
+          <option value="developpement">💻 Développement</option>
+          <option value="infrastructure">🖥️ Infrastructure</option>
+          <option value="reseau">🌐 Réseau</option>
+          <option value="erp">📊 ERP</option>
           <option value="support">🛠️ Support</option>
           <option value="virtualisation">⚡ Virtualisation</option>
           <option value="sauvegarde">💾 Sauvegarde</option>
@@ -75,46 +513,59 @@ input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-o
         </select>
       </div>
       <div class="filter-group">
-        <label>💰 Budget min</label>
-        <input type="number" id="budgetMin" placeholder="10000" oninput="applyFilters()">
+        <label>Budget minimum</label>
+        <input type="number" id="budgetMin" placeholder="Ex: 50 000 €" oninput="applyFilters()">
       </div>
       <div class="filter-group">
-        <label>💰 Budget max</label>
-        <input type="number" id="budgetMax" placeholder="1000000" oninput="applyFilters()">
+        <label>Budget maximum</label>
+        <input type="number" id="budgetMax" placeholder="Ex: 500 000 €" oninput="applyFilters()">
       </div>
       <div class="filter-group">
-        <label>📍 Région</label>
+        <label>Région</label>
         <select id="region" onchange="applyFilters()">
           <option value="">Toute la France</option>
           <option value="ile-de-france">Île-de-France</option>
           <option value="grand-est">Grand Est</option>
-          <option value="auvergne">Auvergne</option>
+          <option value="auvergne">Auvergne-Rhône-Alpes</option>
           <option value="occitanie">Occitanie</option>
           <option value="paca">PACA</option>
         </select>
       </div>
     </div>
-    <button class="btn btn-outline" onclick="resetFilters()">✕ Réinitialiser</button>
+    <button class="btn btn-secondary" onclick="resetFilters()">Réinitialiser les filtres</button>
   </div>
+
   <div class="stats">
-    <div class="stat-card"><div class="stat-value" id="statTotal">60</div><div class="stat-label">AO</div></div>
-    <div class="stat-card"><div class="stat-value" id="statBudget">0€</div><div class="stat-label">Budget</div></div>
-    <div class="stat-card"><div class="stat-value" id="statRecent">60</div><div class="stat-label">Récents</div></div>
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">60</div>
+      <div class="stat-label">Appels d'offres disponibles</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statBudget">0 €</div>
+      <div class="stat-label">Budget cumulé</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statRecent">60</div>
+      <div class="stat-label">Publiés cette semaine</div>
+    </div>
   </div>
+
   <div id="results"></div>
 </div>
+
 <div class="toast" id="toast"></div>
+
 <script>
-var DB=[{id:'BOAMP-001',title:'Migration cloud Azure',client:'Min Intérieur',budget:250000,deadline:'2026-04-15',location:'Paris, Île-de-France',sector:'cloud',description:'Migration infrastructure vers Azure.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-01'},{id:'JOUE-102',title:'Cloud souverain',client:'Commission EU',budget:480000,deadline:'2026-05-20',location:'Bruxelles, Europe',sector:'cloud',description:'Infrastructure cloud souveraine RGPD.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-05'},{id:'PLACE-203',title:'AWS GovCloud',client:'Préfecture Paris',budget:320000,deadline:'2026-04-25',location:'Paris, Île-de-France',sector:'cloud',description:'Migration AWS GovCloud certifié.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-08'},{id:'BOAMP-002',title:'Audit sécurité réseau',client:'CHU Nancy',budget:75000,deadline:'2026-03-30',location:'Nancy, Grand Est',sector:'cybersecurite',description:'Audit complet sécurité réseau.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-08'},{id:'DATA-301',title:'SOC mutualisé',client:'DINUM',budget:650000,deadline:'2026-06-10',location:'Paris, Île-de-France',sector:'cybersecurite',description:'SOC mutualisé administrations.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-02'},{id:'MARCHE-401',title:'Pentest bancaire',client:'Crédit Agricole',budget:95000,deadline:'2026-04-12',location:'Paris, Île-de-France',sector:'cybersecurite',description:'Tests intrusion plateforme bancaire.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-10'},{id:'BOAMP-003',title:'Plateforme e-learning',client:'Univ Strasbourg',budget:180000,deadline:'2026-04-20',location:'Strasbourg, Grand Est',sector:'developpement',description:'Plateforme apprentissage en ligne.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-05'},{id:'BOAMP-004',title:'Refonte site web',client:'Région Grand Est',budget:120000,deadline:'2026-04-10',location:'Strasbourg, Grand Est',sector:'developpement',description:'Refonte site régional RGAA.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-03'},{id:'FRANCE-501',title:'Portail React Node',client:'Ville Lyon',budget:145000,deadline:'2026-05-05',location:'Lyon, Auvergne',sector:'developpement',description:'Portail citoyen moderne React.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-07'},{id:'BOAMP-005',title:'Infra datacenter',client:'Métropole Strasbourg',budget:450000,deadline:'2026-05-01',location:'Strasbourg, Grand Est',sector:'infrastructure',description:'Infrastructure réseau datacenter.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-07'},{id:'BOAMP-010',title:'Virtualisation VMware',client:'Caisse Dépôts',budget:380000,deadline:'2026-04-28',location:'Paris, Île-de-France',sector:'infrastructure',description:'Migration VMware redondance.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-02'},{id:'JOUE-103',title:'Datacenter Tier IV',client:'Europol',budget:2500000,deadline:'2026-07-15',location:'La Haye, Europe',sector:'infrastructure',description:'Datacenter Tier IV militaire.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-01'},{id:'BOAMP-007',title:'Supervision réseau',client:'ARS',budget:130000,deadline:'2026-04-18',location:'Nancy, Grand Est',sector:'reseau',description:'Système supervision réseau.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-06'},{id:'PLACE-204',title:'Fibre optique campus',client:'Paris-Saclay',budget:280000,deadline:'2026-05-15',location:'Saclay, Île-de-France',sector:'reseau',description:'Réseau fibre 10Gbps campus.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-09'},{id:'MARCHE-402',title:'Téléphonie IP',client:'Orange Business',budget:195000,deadline:'2026-04-22',location:'Paris, Île-de-France',sector:'reseau',description:'Migration téléphonie IP 500 users.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-04'},{id:'BOAMP-008',title:'Dématérialisation',client:'DGFIP',budget:320000,deadline:'2026-05-10',location:'Paris, Île-de-France',sector:'erp',description:'Plateforme dématérialisation.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-04'},{id:'DATA-302',title:'ERP Odoo',client:'Pôle Emploi',budget:450000,deadline:'2026-06-20',location:'Paris, Île-de-France',sector:'erp',description:'Odoo personnalisé complet.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-06'},{id:'FRANCE-502',title:'SAP S/4HANA',client:'Airbus',budget:1200000,deadline:'2026-08-01',location:'Toulouse, Occitanie',sector:'erp',description:'Migration SAP S/4HANA.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-03'},{id:'PLACE-205',title:'Infogérance N1/N2/N3',client:'Min Justice',budget:890000,deadline:'2026-05-30',location:'Paris, Île-de-France',sector:'support',description:'Infogérance complète 24/7.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-01'},{id:'MARCHE-403',title:'MCO applicatif',client:'SNCF',budget:340000,deadline:'2026-04-30',location:'Paris, Île-de-France',sector:'support',description:'MCO applications critiques.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-08'},{id:'JOUE-104',title:'VDI Citrix',client:'Parlement EU',budget:620000,deadline:'2026-06-15',location:'Strasbourg, Grand Est',sector:'virtualisation',description:'VDI Citrix 2000 users.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-05'},{id:'DATA-303',title:'VDI VMware',client:'La Poste',budget:280000,deadline:'2026-05-12',location:'Paris, Île-de-France',sector:'virtualisation',description:'Postes virtualisés VMware.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-09'},{id:'BOAMP-006',title:'Sauvegarde cloud',client:'Préfecture 67',budget:95000,deadline:'2026-04-05',location:'Strasbourg, Grand Est',sector:'sauvegarde',description:'Solution sauvegarde cloud.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-09'},{id:'FRANCE-503',title:'Archivage longue durée',client:'Archives Nationales',budget:420000,deadline:'2026-06-01',location:'Paris, Île-de-France',sector:'sauvegarde',description:'Archivage 50 ans valeur probante.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-02'},{id:'PLACE-206',title:'Supervision multi-sites',client:'EDF',budget:510000,deadline:'2026-05-25',location:'Paris, Île-de-France',sector:'supervision',description:'Plateforme 50 datacenters.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-07'},{id:'MARCHE-404',title:'APM monitoring',client:'BNP Paribas',budget:295000,deadline:'2026-04-28',location:'Paris, Île-de-France',sector:'supervision',description:'APM applications bancaires.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-10'},{id:'BOAMP-009',title:'Formation cyber',client:'Pôle Emploi',budget:45000,deadline:'2026-03-25',location:'Paris, Île-de-France',sector:'formation',description:'Formation cybersécurité 50 IT.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-10'},{id:'DATA-304',title:'Formation DevOps',client:'Min Économie',budget:68000,deadline:'2026-04-15',location:'Paris, Île-de-France',sector:'formation',description:'Parcours DevOps Kubernetes.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-06'},{id:'JOUE-105',title:'App mobile citoyenne',client:'Ville Bruxelles',budget:135000,deadline:'2026-05-08',location:'Bruxelles, Europe',sector:'mobile',description:'App iOS Android municipale.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-08'},{id:'FRANCE-504',title:'App santé connectée',client:'AP Paris',budget:220000,deadline:'2026-05-18',location:'Paris, Île-de-France',sector:'mobile',description:'App suivi santé objets connectés.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-04'},{id:'PLACE-207',title:'BI Power BI',client:'Carrefour',budget:380000,deadline:'2026-06-05',location:'Paris, Île-de-France',sector:'bi',description:'Plateforme Power BI dashboards.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-05'},{id:'MARCHE-405',title:'Data Lake analytics',client:'Renault',budget:720000,deadline:'2026-07-10',location:'Paris, Île-de-France',sector:'bi',description:'Data Lake Azure ML.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-01'},{id:'DATA-305',title:'Pipeline GitLab',client:'Société Générale',budget:265000,deadline:'2026-05-20',location:'Paris, Île-de-France',sector:'devops',description:'CI/CD GitLab automatisation.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-09'},{id:'JOUE-106',title:'Kubernetes prod',client:'BCE',budget:890000,deadline:'2026-08-15',location:'Francfort, Europe',sector:'devops',description:'Infra Kubernetes haute dispo.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-03'},{id:'BOAMP-011',title:'Microsoft 365',client:'Région Occitanie',budget:175000,deadline:'2026-04-18',location:'Toulouse, Occitanie',sector:'cloud',description:'Migration M365 E5 Teams.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-11'},{id:'FRANCE-505',title:'GED Alfresco',client:'Min Culture',budget:235000,deadline:'2026-05-22',location:'Paris, Île-de-France',sector:'erp',description:'GED 500k documents.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-08'},{id:'PLACE-208',title:'Firewall NGF',client:'Banque France',budget:420000,deadline:'2026-05-28',location:'Paris, Île-de-France',sector:'cybersecurite',description:'Firewalls Fortinet Palo Alto.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-10'},{id:'MARCHE-406',title:'WiFi 6',client:'Bouygues',budget:310000,deadline:'2026-04-26',location:'Paris, Île-de-France',sector:'reseau',description:'WiFi 6 Aruba 25 sites.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-07'},{id:'DATA-306',title:'Portail RH',client:'Fonction Publique',budget:185000,deadline:'2026-05-14',location:'Paris, Île-de-France',sector:'developpement',description:'Portail RH gestion carrières.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-11'},{id:'JOUE-107',title:'VPN sécurisé',client:'NATO',budget:680000,deadline:'2026-07-01',location:'Bruxelles, Europe',sector:'cybersecurite',description:'VPN haute sécurité 5000 users.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-04'},{id:'BOAMP-012',title:'Stockage SAN',client:'CNRS',budget:540000,deadline:'2026-06-08',location:'Paris, Île-de-France',sector:'infrastructure',description:'Baie SAN 2 PB recherche.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-09'},{id:'FRANCE-506',title:'Salesforce CRM',client:'Total',budget:495000,deadline:'2026-06-18',location:'Paris, Île-de-France',sector:'erp',description:'Salesforce Sales Cloud.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-06'},{id:'PLACE-209',title:'Tests Selenium',client:'CPAM',budget:125000,deadline:'2026-04-21',location:'Paris, Île-de-France',sector:'devops',description:'Tests auto Selenium.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-10'},{id:'MARCHE-407',title:'Docker migration',client:'Michelin',budget:385000,deadline:'2026-05-24',location:'Clermont-Ferrand, Auvergne',sector:'devops',description:'Migration Docker containers.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-05'},{id:'DATA-307',title:'HPC calcul',client:'CEA',budget:1850000,deadline:'2026-08-20',location:'Saclay, Île-de-France',sector:'infrastructure',description:'Cluster HPC simulations.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-02'},{id:'JOUE-108',title:'Blockchain supply',client:'Commission EU Agri',budget:620000,deadline:'2026-07-25',location:'Bruxelles, Europe',sector:'developpement',description:'Blockchain traçabilité.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-07'},{id:'BOAMP-013',title:'WAF protection',client:'Min Armées',budget:295000,deadline:'2026-05-16',location:'Paris, Île-de-France',sector:'cybersecurite',description:'WAF sites sensibles.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-11'},{id:'FRANCE-507',title:'Chatbot IA',client:'Orange',budget:165000,deadline:'2026-04-29',location:'Paris, Île-de-France',sector:'developpement',description:'Chatbot NLP service client.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-09'},{id:'PLACE-210',title:'SIEM Splunk',client:'Airbus Defence',budget:445000,deadline:'2026-06-12',location:'Toulouse, Occitanie',sector:'supervision',description:'SIEM analyse logs.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-08'},{id:'MARCHE-408',title:'IAM SSO',client:'AXA',budget:520000,deadline:'2026-06-22',location:'Paris, Île-de-France',sector:'cybersecurite',description:'IAM SSO MFA 10k users.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-04'},{id:'DATA-308',title:'IoT industriel',client:'Schneider',budget:780000,deadline:'2026-07-18',location:'Grenoble, Auvergne',sector:'developpement',description:'IoT 50k capteurs.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-10'},{id:'JOUE-109',title:'e-Procurement',client:'Parlement EU',budget:890000,deadline:'2026-08-05',location:'Strasbourg, Grand Est',sector:'erp',description:'Plateforme achats UE.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-06'},{id:'BOAMP-014',title:'SD-WAN',client:'Leroy Merlin',budget:360000,deadline:'2026-05-19',location:'Lille, Hauts-de-France',sector:'reseau',description:'SD-WAN 200 magasins.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-11'},{id:'FRANCE-508',title:'Signature DocuSign',client:'BNP',budget:195000,deadline:'2026-04-24',location:'Paris, Île-de-France',sector:'erp',description:'Signature électronique.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-07'},{id:'PLACE-211',title:'Loadbalancer F5',client:'Min Santé',budget:325000,deadline:'2026-05-27',location:'Paris, Île-de-France',sector:'reseau',description:'F5 BIG-IP répartition.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-09'},{id:'MARCHE-409',title:'MDM mobile',client:'Decathlon',budget:145000,deadline:'2026-04-17',location:'Lille, Hauts-de-France',sector:'mobile',description:'MDM 3000 tablettes.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-10'},{id:'DATA-309',title:'RPA auto',client:'Impôts',budget:420000,deadline:'2026-06-14',location:'Paris, Île-de-France',sector:'erp',description:'RPA automatisation admin.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-08'},{id:'JOUE-110',title:'API Gateway',client:'ESA',budget:385000,deadline:'2026-06-28',location:'Paris, Île-de-France',sector:'devops',description:'API Gateway microservices.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-05'}];
+var DB=[{id:'BOAMP-001',title:'Migration infrastructure cloud Azure',client:'Ministère de l\'Intérieur',budget:250000,deadline:'2026-04-15',location:'Paris, Île-de-France',sector:'cloud',description:'Migration de l\'infrastructure actuelle vers Azure avec mise en place d\'une architecture haute disponibilité et redondance multi-zones pour assurer la continuité de service.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-01'},{id:'JOUE-102',title:'Hébergement cloud souverain européen',client:'Commission Européenne',budget:480000,deadline:'2026-05-20',location:'Bruxelles, Europe',sector:'cloud',description:'Mise en place d\'une infrastructure cloud souveraine avec garanties RGPD et conformité européenne totale.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-05'},{id:'PLACE-203',title:'Migration vers AWS GovCloud',client:'Préfecture de Police Paris',budget:320000,deadline:'2026-04-25',location:'Paris, Île-de-France',sector:'cloud',description:'Migration des systèmes critiques vers AWS GovCloud avec certification SecNumCloud et conformité ANSSI.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-08'},{id:'BOAMP-002',title:'Audit de sécurité réseau complet',client:'CHU de Nancy',budget:75000,deadline:'2026-03-30',location:'Nancy, Grand Est',sector:'cybersecurite',description:'Audit complet de sécurité du réseau informatique hospitalier avec tests d\'intrusion et recommandations ANSSI.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-08'},{id:'DATA-301',title:'SOC mutualisé administrations',client:'DINUM',budget:650000,deadline:'2026-06-10',location:'Paris, Île-de-France',sector:'cybersecurite',description:'Déploiement d\'un Security Operations Center mutualisé pour les administrations centrales avec détection temps réel.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-02'},{id:'MARCHE-401',title:'Pentest application bancaire',client:'Crédit Agricole',budget:95000,deadline:'2026-04-12',location:'Paris, Île-de-France',sector:'cybersecurite',description:'Tests d\'intrusion approfondis sur plateforme bancaire en ligne et applications mobiles avec rapport détaillé.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-10'},{id:'BOAMP-003',title:'Développement plateforme e-learning',client:'Université de Strasbourg',budget:180000,deadline:'2026-04-20',location:'Strasbourg, Grand Est',sector:'developpement',description:'Conception et développement d\'une plateforme d\'apprentissage en ligne moderne pour 10 000 étudiants.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-05'},{id:'BOAMP-004',title:'Refonte site web institutionnel',client:'Conseil Régional Grand Est',budget:120000,deadline:'2026-04-10',location:'Strasbourg, Grand Est',sector:'developpement',description:'Refonte complète du site internet régional avec normes d\'accessibilité RGAA et responsive design.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-03'},{id:'FRANCE-501',title:'Portail citoyen React Node.js',client:'Ville de Lyon',budget:145000,deadline:'2026-05-05',location:'Lyon, Auvergne-Rhône-Alpes',sector:'developpement',description:'Développement d\'un portail citoyen moderne en React et Node.js avec services dématérialisés.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-07'},{id:'BOAMP-005',title:'Infrastructure réseau datacenter',client:'Métropole de Strasbourg',budget:450000,deadline:'2026-05-01',location:'Strasbourg, Grand Est',sector:'infrastructure',description:'Conception et déploiement d\'une infrastructure réseau moderne pour datacenter métropolitain.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-07'},{id:'BOAMP-010',title:'Virtualisation infrastructure serveurs',client:'Caisse des Dépôts',budget:380000,deadline:'2026-04-28',location:'Paris, Île-de-France',sector:'infrastructure',description:'Migration vers infrastructure virtualisée VMware avec redondance des systèmes critiques.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-02'},{id:'JOUE-103',title:'Datacenter Tier IV haute sécurité',client:'Europol',budget:2500000,deadline:'2026-07-15',location:'La Haye, Europe',sector:'infrastructure',description:'Construction et équipement d\'un datacenter Tier IV avec normes militaires pour Europol.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-01'},{id:'BOAMP-007',title:'Système de supervision réseau',client:'Agence Régionale de Santé',budget:130000,deadline:'2026-04-18',location:'Nancy, Grand Est',sector:'reseau',description:'Déploiement d\'un système de supervision et monitoring réseau temps réel avec alertes.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-06'},{id:'PLACE-204',title:'Réseau fibre optique campus universitaire',client:'Université Paris-Saclay',budget:280000,deadline:'2026-05-15',location:'Saclay, Île-de-France',sector:'reseau',description:'Déploiement d\'un réseau fibre optique 10Gbps sur l\'ensemble du campus universitaire.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-09'},{id:'MARCHE-402',title:'Téléphonie IP entreprise complète',client:'Orange Business Services',budget:195000,deadline:'2026-04-22',location:'Paris, Île-de-France',sector:'reseau',description:'Migration vers solution de téléphonie IP unifiée pour 500 utilisateurs avec visioconférence.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-04'},{id:'BOAMP-008',title:'Plateforme de dématérialisation',client:'Direction Générale des Finances Publiques',budget:320000,deadline:'2026-05-10',location:'Paris, Île-de-France',sector:'erp',description:'Développement d\'une plateforme de dématérialisation des procédures administratives et fiscales.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-04'},{id:'DATA-302',title:'ERP Odoo personnalisé complet',client:'Pôle Emploi',budget:450000,deadline:'2026-06-20',location:'Paris, Île-de-France',sector:'erp',description:'Déploiement et personnalisation d\'Odoo pour gestion complète des processus métier.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-06'},{id:'FRANCE-502',title:'Migration SAP S/4HANA',client:'Airbus Group',budget:1200000,deadline:'2026-08-01',location:'Toulouse, Occitanie',sector:'erp',description:'Migration SAP ECC vers S/4HANA avec modules Finance, RH et Production.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-03'},{id:'PLACE-205',title:'Support N1 N2 N3 infogérance',client:'Ministère de la Justice',budget:890000,deadline:'2026-05-30',location:'Paris, Île-de-France',sector:'support',description:'Prestation d\'infogérance complète avec support multi-niveaux 24/7 pour parc de 5000 postes.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-01'},{id:'MARCHE-403',title:'MCO applicatif métier SNCF',client:'SNCF',budget:340000,deadline:'2026-04-30',location:'Paris, Île-de-France',sector:'support',description:'Maintien en condition opérationnelle d\'applications métier critiques transport ferroviaire.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-08'},{id:'JOUE-104',title:'Infrastructure VDI Citrix complète',client:'Parlement Européen',budget:620000,deadline:'2026-06-15',location:'Strasbourg, Grand Est',sector:'virtualisation',description:'Déploiement infrastructure VDI Citrix pour 2000 utilisateurs avec accès sécurisé distant.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-05'},{id:'DATA-303',title:'Virtualisation postes de travail VMware',client:'La Poste',budget:280000,deadline:'2026-05-12',location:'Paris, Île-de-France',sector:'virtualisation',description:'Migration vers postes de travail virtualisés VMware Horizon pour télétravail.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-09'},{id:'BOAMP-006',title:'Solution de sauvegarde cloud Veeam',client:'Préfecture du Bas-Rhin',budget:95000,deadline:'2026-04-05',location:'Strasbourg, Grand Est',sector:'sauvegarde',description:'Mise en place d\'une solution de sauvegarde et récupération des données dans le cloud.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-09'},{id:'FRANCE-503',title:'Archivage électronique longue durée',client:'Archives Nationales',budget:420000,deadline:'2026-06-01',location:'Paris, Île-de-France',sector:'sauvegarde',description:'Système d\'archivage électronique à valeur probante avec conservation 50 ans.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-02'},{id:'PLACE-206',title:'Plateforme supervision multi-sites EDF',client:'EDF',budget:510000,deadline:'2026-05-25',location:'Paris, Île-de-France',sector:'supervision',description:'Déploiement plateforme de supervision centralisée pour 50 datacenters avec IA prédictive.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-07'},{id:'MARCHE-404',title:'APM et monitoring applicatif bancaire',client:'BNP Paribas',budget:295000,deadline:'2026-04-28',location:'Paris, Île-de-France',sector:'supervision',description:'Solution APM pour applications critiques bancaires avec alertes temps réel.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-10'},{id:'BOAMP-009',title:'Formation cybersécurité certifiante',client:'Pôle Emploi',budget:45000,deadline:'2026-03-25',location:'Paris, Île-de-France',sector:'formation',description:'Formation intensive en cybersécurité pour 50 collaborateurs IT avec certifications CEH.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-10'},{id:'DATA-304',title:'Parcours DevOps et méthodologie Agile',client:'Ministère de l\'Économie',budget:68000,deadline:'2026-04-15',location:'Paris, Île-de-France',sector:'formation',description:'Formation complète DevOps, Kubernetes et CI/CD pour équipes de développement.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-06'},{id:'JOUE-105',title:'Application mobile citoyenne multiservice',client:'Ville de Bruxelles',budget:135000,deadline:'2026-05-08',location:'Bruxelles, Europe',sector:'mobile',description:'Développement application mobile iOS et Android pour services municipaux et e-démarches.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-08'},{id:'FRANCE-504',title:'Application mobile santé connectée',client:'Assistance Publique Paris',budget:220000,deadline:'2026-05-18',location:'Paris, Île-de-France',sector:'mobile',description:'Application mobile de suivi santé connectée avec objets connectés et dossier médical.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-04'},{id:'PLACE-207',title:'Plateforme BI Power BI complète',client:'Carrefour France',budget:380000,deadline:'2026-06-05',location:'Paris, Île-de-France',sector:'bi',description:'Déploiement plateforme Business Intelligence Power BI avec dashboards temps réel.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-05'},{id:'MARCHE-405',title:'Data Lake et analytics avancés',client:'Renault',budget:720000,deadline:'2026-07-10',location:'Paris, Île-de-France',sector:'bi',description:'Construction Data Lake Azure avec outils analytics avancés et Machine Learning.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-01'},{id:'DATA-305',title:'Pipeline CI/CD GitLab automatisé',client:'Société Générale',budget:265000,deadline:'2026-05-20',location:'Paris, Île-de-France',sector:'devops',description:'Mise en place pipeline CI/CD GitLab avec automatisation déploiements et tests.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-09'},{id:'JOUE-106',title:'Infrastructure Kubernetes production',client:'Banque Centrale Européenne',budget:890000,deadline:'2026-08-15',location:'Francfort, Europe',sector:'devops',description:'Déploiement infrastructure Kubernetes production avec haute disponibilité et sécurité renforcée.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-03'},{id:'BOAMP-011',title:'Messagerie collaborative Microsoft 365',client:'Région Occitanie',budget:175000,deadline:'2026-04-18',location:'Toulouse, Occitanie',sector:'cloud',description:'Migration vers Microsoft 365 E5 avec Teams, SharePoint et sécurité avancée.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-11'},{id:'FRANCE-505',title:'GED documentaire Alfresco entreprise',client:'Ministère de la Culture',budget:235000,deadline:'2026-05-22',location:'Paris, Île-de-France',sector:'erp',description:'Déploiement GED Alfresco pour gestion de 500 000 documents numérisés avec workflow.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-08'},{id:'PLACE-208',title:'Firewall nouvelle génération enterprise',client:'Banque de France',budget:420000,deadline:'2026-05-28',location:'Paris, Île-de-France',sector:'cybersecurite',description:'Déploiement firewalls Fortinet et Palo Alto avec IPS, antimalware et sandboxing.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-10'},{id:'MARCHE-406',title:'WiFi 6 multi-sites entreprise',client:'Bouygues Telecom',budget:310000,deadline:'2026-04-26',location:'Paris, Île-de-France',sector:'reseau',description:'Déploiement WiFi 6 Aruba sur 25 sites avec contrôleur centralisé et gestion cloud.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-07'},{id:'DATA-306',title:'Portail RH libre-service collaboratif',client:'Fonction Publique',budget:185000,deadline:'2026-05-14',location:'Paris, Île-de-France',sector:'developpement',description:'Développement portail RH en ligne pour gestion carrières et formations agents publics.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-11'},{id:'JOUE-107',title:'VPN accès distant haute sécurité',client:'NATO',budget:680000,deadline:'2026-07-01',location:'Bruxelles, Europe',sector:'cybersecurite',description:'Solution VPN haute sécurité pour accès distant de 5000 utilisateurs avec authentification multi-facteurs.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-04'},{id:'BOAMP-012',title:'Stockage SAN baie haute capacité',client:'CNRS',budget:540000,deadline:'2026-06-08',location:'Paris, Île-de-France',sector:'infrastructure',description:'Acquisition baie de stockage SAN de 2 petabytes pour données de recherche scientifique.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-09'},{id:'FRANCE-506',title:'CRM Salesforce personnalisé secteur énergie',client:'Total Energies',budget:495000,deadline:'2026-06-18',location:'Paris, Île-de-France',sector:'erp',description:'Déploiement Salesforce Sales Cloud avec personnalisations métier spécifiques au secteur énergie.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-06'},{id:'PLACE-209',title:'Tests automatisés Selenium framework',client:'Assurance Maladie',budget:125000,deadline:'2026-04-21',location:'Paris, Île-de-France',sector:'devops',description:'Mise en place framework de tests automatisés Selenium pour applications web critiques.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-10'},{id:'MARCHE-407',title:'Conteneurisation Docker migration complète',client:'Michelin',budget:385000,deadline:'2026-05-24',location:'Clermont-Ferrand, Auvergne-Rhône-Alpes',sector:'devops',description:'Migration des applications legacy vers architecture Docker containerisée avec orchestration.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-05'},{id:'DATA-307',title:'Serveurs HPC calcul intensif recherche',client:'CEA',budget:1850000,deadline:'2026-08-20',location:'Saclay, Île-de-France',sector:'infrastructure',description:'Acquisition cluster HPC pour simulations nucléaires et calculs d\'intelligence artificielle.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-02'},{id:'JOUE-108',title:'Blockchain supply chain agriculture',client:'Commission UE Agriculture',budget:620000,deadline:'2026-07-25',location:'Bruxelles, Europe',sector:'developpement',description:'Plateforme blockchain pour traçabilité supply chain des produits agricoles européens.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-07'},{id:'BOAMP-013',title:'WAF protection applications web sensibles',client:'Ministère des Armées',budget:295000,deadline:'2026-05-16',location:'Paris, Île-de-France',sector:'cybersecurite',description:'Déploiement Web Application Firewall pour protection des sites sensibles de la défense.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-11'},{id:'FRANCE-507',title:'Chatbot IA NLP service client',client:'Orange',budget:165000,deadline:'2026-04-29',location:'Paris, Île-de-France',sector:'developpement',description:'Développement chatbot IA avec traitement langage naturel pour service client avec intégration CRM.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-09'},{id:'PLACE-210',title:'Analyse logs SIEM Splunk enterprise',client:'Airbus Defence and Space',budget:445000,deadline:'2026-06-12',location:'Toulouse, Occitanie',sector:'supervision',description:'Plateforme SIEM Splunk pour analyse logs sécurité et détection menaces avancées.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-08'},{id:'MARCHE-408',title:'Identity management IAM enterprise',client:'AXA France',budget:520000,deadline:'2026-06-22',location:'Paris, Île-de-France',sector:'cybersecurite',description:'Solution IAM avec SSO et authentification multi-facteurs pour 10 000 utilisateurs.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-04'},{id:'DATA-308',title:'IoT plateforme industrielle connectée',client:'Schneider Electric',budget:780000,deadline:'2026-07-18',location:'Grenoble, Auvergne-Rhône-Alpes',sector:'developpement',description:'Plateforme IoT industrielle pour monitoring de 50 000 capteurs en temps réel.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-10'},{id:'JOUE-109',title:'e-Procurement plateforme achats européenne',client:'Parlement Européen',budget:890000,deadline:'2026-08-05',location:'Strasbourg, Grand Est',sector:'erp',description:'Plateforme e-procurement unifiée pour gestion des achats des parlements européens.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-06'},{id:'BOAMP-014',title:'SD-WAN interconnexion multi-sites retail',client:'Leroy Merlin',budget:360000,deadline:'2026-05-19',location:'Lille, Hauts-de-France',sector:'reseau',description:'Déploiement SD-WAN pour interconnexion sécurisée de 200 magasins avec QoS garantie.',url:'https://www.boamp.fr',source:'BOAMP',publishDate:'2026-03-11'},{id:'FRANCE-508',title:'Signature électronique DocuSign enterprise',client:'BNP Paribas',budget:195000,deadline:'2026-04-24',location:'Paris, Île-de-France',sector:'erp',description:'Solution de signature électronique DocuSign pour dématérialisation complète des contrats.',url:'https://francemarche.fr',source:'Francemarché',publishDate:'2026-03-07'},{id:'PLACE-211',title:'Loadbalancer F5 haute disponibilité',client:'Ministère de la Santé',budget:325000,deadline:'2026-05-27',location:'Paris, Île-de-France',sector:'reseau',description:'Load balancers F5 BIG-IP pour répartition de charge des applications critiques de santé.',url:'https://place-des-entreprises.beta.gouv.fr',source:'Place des Entreprises',publishDate:'2026-03-09'},{id:'MARCHE-409',title:'MDM gestion parc mobile retail',client:'Decathlon',budget:145000,deadline:'2026-04-17',location:'Lille, Hauts-de-France',sector:'mobile',description:'Solution MDM pour gestion centralisée de 3000 tablettes en magasin.',url:'https://marcheonline.fr',source:'Marchéonline',publishDate:'2026-03-10'},{id:'DATA-309',title:'RPA automatisation processus administratifs',client:'Direction Générale des Impôts',budget:420000,deadline:'2026-06-14',location:'Paris, Île-de-France',sector:'erp',description:'Solution RPA pour automatisation des tâches administratives répétitives et optimisation des processus.',url:'https://data.gouv.fr',source:'Data.gouv.fr',publishDate:'2026-03-08'},{id:'JOUE-110',title:'API Gateway architecture microservices',client:'Agence Spatiale Européenne',budget:385000,deadline:'2026-06-28',location:'Paris, Île-de-France',sector:'devops',description:'API Gateway Kong pour architecture microservices des systèmes spatiaux critiques.',url:'https://ted.europa.eu',source:'JOUE',publishDate:'2026-03-05'}];
 var filt=[];
 function applyFilters(){var s=document.getElementById('sector').value;var min=parseInt(document.getElementById('budgetMin').value)||0;var max=parseInt(document.getElementById('budgetMax').value)||999999999;var r=document.getElementById('region').value.toLowerCase();filt=DB.filter(function(a){if(s&&a.sector!==s)return false;if(a.budget<min||a.budget>max)return false;if(r&&!a.location.toLowerCase().includes(r.replace('-',' ')))return false;return true;});display();updateStats();}
-function display(){var c=document.getElementById('results');if(!filt.length){c.innerHTML='<div style="text-align:center;padding:60px;color:#94a9c9;"><div style="font-size:4em;margin-bottom:16px;">🔍</div><h3>Aucun AO</h3></div>';return;}var h='<div class="ao-list">';filt.forEach(function(a){h+='<div class="ao-card"><div class="ao-header"><div><div class="ao-title">'+a.title+'</div><div class="ao-client">📍 '+a.client+'</div></div><div class="ao-badge">📡 '+a.source+'</div></div><div class="ao-meta"><div class="meta-item"><div class="meta-label">Ref</div><div class="meta-value">'+a.id+'</div></div><div class="meta-item"><div class="meta-label">Budget</div><div class="meta-value">'+fmt(a.budget)+'</div></div><div class="meta-item"><div class="meta-label">Deadline</div><div class="meta-value">'+fmtD(a.deadline)+'</div></div><div class="meta-item"><div class="meta-label">Lieu</div><div class="meta-value">'+a.location+'</div></div></div><div class="ao-desc">'+a.description+'</div><a href="'+a.url+'" target="_blank" class="ao-link">📄 Voir →</a></div>';});h+='</div>';c.innerHTML=h;}
+function display(){var c=document.getElementById('results');if(!filt.length){c.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><h2>Aucun appel d\'offres trouvé</h2><p style="margin-top:12px;">Essayez d\'ajuster vos critères de recherche</p></div>';return;}var h='<div class="ao-list">';filt.forEach(function(a,i){h+='<div class="ao-card" style="animation-delay:'+i*0.05+'s"><div class="ao-header"><div><div class="ao-title">'+a.title+'</div><div class="ao-client">📍 '+a.client+'</div></div><div class="badge badge-source">📡 '+a.source+'</div></div><div class="ao-meta"><div class="meta-item"><div class="meta-label">RÉFÉRENCE</div><div class="meta-value">'+a.id+'</div></div><div class="meta-item"><div class="meta-label">BUDGET</div><div class="meta-value">'+fmt(a.budget)+'</div></div><div class="meta-item"><div class="meta-label">DATE LIMITE</div><div class="meta-value">'+fmtD(a.deadline)+'</div></div><div class="meta-item"><div class="meta-label">LOCALISATION</div><div class="meta-value">'+a.location+'</div></div></div><div class="ao-description">'+a.description+'</div><a href="'+a.url+'" target="_blank" class="ao-link">Voir l\'annonce complète <span>→</span></a></div>';});h+='</div>';c.innerHTML=h;}
 function updateStats(){document.getElementById('statTotal').textContent=filt.length;document.getElementById('statBudget').textContent=fmt(filt.reduce(function(s,a){return s+a.budget;},0));var w=new Date();w.setDate(w.getDate()-7);document.getElementById('statRecent').textContent=filt.filter(function(a){return new Date(a.publishDate)>=w;}).length;}
 function resetFilters(){document.getElementById('sector').value='';document.getElementById('budgetMin').value='';document.getElementById('budgetMax').value='';document.getElementById('region').value='';applyFilters();}
 function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);}
 function fmtD(d){return new Date(d).toLocaleDateString('fr-FR');}
-function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
-window.onload=function(){applyFilters();toast('✅ 60 AO chargés automatiquement !');};
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3500);}
+window.onload=function(){applyFilters();toast('✓ 60 appels d\'offres chargés · Scraping en temps réel bientôt disponible');};
 </script>
 </body>
 </html>
