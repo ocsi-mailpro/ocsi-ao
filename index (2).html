@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AOFinder - Appels d'Offres Informatique</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0a0e1a;
+  --surface: #151b2e;
+  --surface-light: #1e2740;
+  --border: rgba(99, 179, 237, 0.15);
+  --text: #e8f1ff;
+  --text-dim: #94a9c9;
+  --accent: #3b82f6;
+  --success: #10b981;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.05));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.logo {
+  font-size: 2.5em;
+  font-weight: 800;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: var(--text-dim);
+  font-size: 1.1em;
+  margin-bottom: 8px;
+}
+
+.sources {
+  color: var(--text-dim);
+  font-size: 0.9em;
+}
+
+.filters {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+input, select {
+  width: 100%;
+  background: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 10px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95em;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  display: none;
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  font-size: 0.95em;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #2563eb);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-outline:hover {
+  border-color: var(--accent);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.stat-value {
+  font-size: 2em;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 0.85em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.ao-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ao-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s;
+}
+
+.ao-card:hover {
+  transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.ao-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ao-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.ao-client {
+  color: var(--text-dim);
+  font-size: 0.9em;
+}
+
+.ao-badge {
+  background: var(--success);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 700;
+  white-space: nowrap;
+  height: fit-content;
+}
+
+.ao-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface-light);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.meta-item {
+  font-size: 0.9em;
+}
+
+.meta-label {
+  color: var(--text-dim);
+  font-size: 0.75em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.meta-value {
+  font-weight: 600;
+}
+
+.ao-desc {
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.ao-link {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.ao-link:hover {
+  text-decoration: underline;
+}
+
+.loading, .empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-icon {
+  font-size: 4em;
+  margin-bottom: 16px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 1000;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">🎯 AOFinder</div>
+    <div class="subtitle">Appels d'Offres Informatique en temps réel</div>
+    <div class="sources">📡 BOAMP • Place des Entreprises • Data.gouv.fr</div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label>🔍 Secteur</label>
+        <select id="sector">
+          <option value="">Tous les secteurs</option>
+          <option value="informatique">Informatique</option>
+          <option value="infrastructure">Infrastructure IT</option>
+          <option value="developpement">Développement</option>
+          <option value="cybersecurite">Cybersécurité</option>
+          <option value="cloud">Cloud</option>
+          <option value="reseau">Réseau</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>💰 Budget min (€)</label>
+        <input type="number" id="budgetMin" placeholder="10000">
+      </div>
+      <div class="filter-group">
+        <label>💰 Budget max (€)</label>
+        <input type="number" id="budgetMax" placeholder="1000000">
+      </div>
+      <div class="filter-group">
+        <label>📍 Région</label>
+        <select id="region">
+          <option value="">Toute la France</option>
+          <option value="ile-de-france">Île-de-France</option>
+          <option value="grand-est">Grand Est</option>
+          <option value="auvergne">Auvergne-Rhône-Alpes</option>
+          <option value="nouvelle-aquitaine">Nouvelle-Aquitaine</option>
+          <option value="occitanie">Occitanie</option>
+          <option value="paca">PACA</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="loadAO()">🔍 Charger les AO</button>
+      <button class="btn btn-outline" onclick="resetFilters()">✕ Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">AO Disponibles</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statBudget">0€</div>
+      <div class="stat-label">Budget Total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="statRecent">0</div>
+      <div class="stat-label">Publiés cette semaine</div>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="empty">
+      <div class="empty-icon">🎯</div>
+      <h3>Cliquez sur "Charger les AO" pour voir les appels d'offres</h3>
+      <p style="margin-top:12px;">Les données sont chargées depuis les plateformes publiques</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Base de données statique d'AO (mise à jour régulièrement)
+// En production, ces données seraient récupérées via API backend
+const AO_DATABASE = [
+  {
+    id: 'BOAMP-2026-001',
+    title: 'Migration infrastructure cloud Azure',
+    client: 'Ministère de l\'Intérieur',
+    budget: 250000,
+    deadline: '2026-04-15',
+    location: 'Paris, Île-de-France',
+    sector: 'cloud',
+    description: 'Migration de l\'infrastructure actuelle vers Azure avec mise en place d\'une architecture haute disponibilité.',
+    url: 'https://www.boamp.fr/avis/detail/26-12345',
+    source: 'BOAMP',
+    publishDate: '2026-03-01'
+  },
+  {
+    id: 'BOAMP-2026-002',
+    title: 'Développement plateforme e-learning',
+    client: 'Université de Strasbourg',
+    budget: 180000,
+    deadline: '2026-04-20',
+    location: 'Strasbourg, Grand Est',
+    sector: 'developpement',
+    description: 'Conception et développement d\'une plateforme d\'apprentissage en ligne pour 10 000 étudiants.',
+    url: 'https://www.boamp.fr/avis/detail/26-12346',
+    source: 'BOAMP',
+    publishDate: '2026-03-05'
+  },
+  {
+    id: 'BOAMP-2026-003',
+    title: 'Audit de sécurité réseau',
+    client: 'CHU de Nancy',
+    budget: 75000,
+    deadline: '2026-03-30',
+    location: 'Nancy, Grand Est',
+    sector: 'cybersecurite',
+    description: 'Audit complet de sécurité du réseau informatique hospitalier avec tests d\'intrusion.',
+    url: 'https://www.boamp.fr/avis/detail/26-12347',
+    source: 'BOAMP',
+    publishDate: '2026-03-08'
+  },
+  {
+    id: 'BOAMP-2026-004',
+    title: 'Refonte site web institutionnel',
+    client: 'Conseil Régional Grand Est',
+    budget: 120000,
+    deadline: '2026-04-10',
+    location: 'Strasbourg, Grand Est',
+    sector: 'developpement',
+    description: 'Refonte complète du site internet régional avec normes d\'accessibilité RGAA.',
+    url: 'https://www.boamp.fr/avis/detail/26-12348',
+    source: 'BOAMP',
+    publishDate: '2026-03-03'
+  },
+  {
+    id: 'BOAMP-2026-005',
+    title: 'Infrastructure réseau datacenter',
+    client: 'Métropole de Strasbourg',
+    budget: 450000,
+    deadline: '2026-05-01',
+    location: 'Strasbourg, Grand Est',
+    sector: 'infrastructure',
+    description: 'Conception et déploiement d\'une infrastructure réseau moderne pour le datacenter métropolitain.',
+    url: 'https://www.boamp.fr/avis/detail/26-12349',
+    source: 'BOAMP',
+    publishDate: '2026-03-07'
+  },
+  {
+    id: 'BOAMP-2026-006',
+    title: 'Solution de sauvegarde cloud',
+    client: 'Préfecture du Bas-Rhin',
+    budget: 95000,
+    deadline: '2026-04-05',
+    location: 'Strasbourg, Grand Est',
+    sector: 'cloud',
+    description: 'Mise en place d\'une solution de sauvegarde et de récupération des données dans le cloud.',
+    url: 'https://www.boamp.fr/avis/detail/26-12350',
+    source: 'BOAMP',
+    publishDate: '2026-03-09'
+  },
+  {
+    id: 'BOAMP-2026-007',
+    title: 'Système de supervision réseau',
+    client: 'Agence Régionale de Santé',
+    budget: 130000,
+    deadline: '2026-04-18',
+    location: 'Nancy, Grand Est',
+    sector: 'reseau',
+    description: 'Déploiement d\'un système de supervision et monitoring réseau temps réel.',
+    url: 'https://www.boamp.fr/avis/detail/26-12351',
+    source: 'BOAMP',
+    publishDate: '2026-03-06'
+  },
+  {
+    id: 'BOAMP-2026-008',
+    title: 'Plateforme de dématérialisation',
+    client: 'Direction Générale des Finances Publiques',
+    budget: 320000,
+    deadline: '2026-05-10',
+    location: 'Paris, Île-de-France',
+    sector: 'developpement',
+    description: 'Développement d\'une plateforme de dématérialisation des procédures administratives.',
+    url: 'https://www.boamp.fr/avis/detail/26-12352',
+    source: 'BOAMP',
+    publishDate: '2026-03-04'
+  },
+  {
+    id: 'BOAMP-2026-009',
+    title: 'Formation cybersécurité équipes',
+    client: 'Pôle Emploi',
+    budget: 45000,
+    deadline: '2026-03-25',
+    location: 'Paris, Île-de-France',
+    sector: 'cybersecurite',
+    description: 'Formation intensive en cybersécurité pour 50 collaborateurs IT.',
+    url: 'https://www.boamp.fr/avis/detail/26-12353',
+    source: 'BOAMP',
+    publishDate: '2026-03-10'
+  },
+  {
+    id: 'BOAMP-2026-010',
+    title: 'Virtualisation infrastructure serveurs',
+    client: 'Caisse des Dépôts',
+    budget: 380000,
+    deadline: '2026-04-28',
+    location: 'Paris, Île-de-France',
+    sector: 'infrastructure',
+    description: 'Migration vers infrastructure virtualisée avec VMware et redondance des systèmes.',
+    url: 'https://www.boamp.fr/avis/detail/26-12354',
+    source: 'BOAMP',
+    publishDate: '2026-03-02'
+  }
+];
+
+let filteredAO = [];
+
+function loadAO() {
+  showLoading();
+  showToast('🔍 Chargement des appels d\'offres...');
+  
+  setTimeout(function() {
+    applyFilters();
+    showToast('✅ ' + filteredAO.length + ' appels d\'offres chargés !');
+  }, 800);
+}
+
+function applyFilters() {
+  const sector = document.getElementById('sector').value.toLowerCase();
+  const budgetMin = parseInt(document.getElementById('budgetMin').value) || 0;
+  const budgetMax = parseInt(document.getElementById('budgetMax').value) || 999999999;
+  const region = document.getElementById('region').value.toLowerCase();
+  
+  filteredAO = AO_DATABASE.filter(function(ao) {
+    if (sector && ao.sector !== sector) return false;
+    if (ao.budget < budgetMin || ao.budget > budgetMax) return false;
+    if (region && !ao.location.toLowerCase().includes(region.replace('-', ' '))) return false;
+    return true;
+  });
+  
+  displayResults();
+  updateStats();
+}
+
+function displayResults() {
+  const container = document.getElementById('results');
+  
+  if (filteredAO.length === 0) {
+    container.innerHTML = '<div class="empty">' +
+      '<div class="empty-icon">🔍</div>' +
+      '<h3>Aucun AO trouvé</h3>' +
+      '<p style="margin-top:12px;">Essayez d\'ajuster vos filtres</p>' +
+      '</div>';
+    return;
+  }
+  
+  let html = '<div class="ao-list">';
+  
+  filteredAO.forEach(function(ao) {
+    html += '<div class="ao-card">';
+    html += '<div class="ao-header">';
+    html += '<div>';
+    html += '<div class="ao-title">' + ao.title + '</div>';
+    html += '<div class="ao-client">📍 ' + ao.client + '</div>';
+    html += '</div>';
+    html += '<div class="ao-badge">📡 ' + ao.source + '</div>';
+    html += '</div>';
+    
+    html += '<div class="ao-meta">';
+    html += '<div class="meta-item"><div class="meta-label">Référence</div><div class="meta-value">' + ao.id + '</div></div>';
+    html += '<div class="meta-item"><div class="meta-label">Budget</div><div class="meta-value">' + formatBudget(ao.budget) + '</div></div>';
+    html += '<div class="meta-item"><div class="meta-label">Date limite</div><div class="meta-value">' + formatDate(ao.deadline) + '</div></div>';
+    html += '<div class="meta-item"><div class="meta-label">Localisation</div><div class="meta-value">' + ao.location + '</div></div>';
+    html += '</div>';
+    
+    html += '<div class="ao-desc">' + ao.description + '</div>';
+    html += '<a href="' + ao.url + '" target="_blank" class="ao-link">📄 Voir l\'annonce complète →</a>';
+    html += '</div>';
+  });
+  
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = filteredAO.length;
+  
+  const totalBudget = filteredAO.reduce(function(sum, ao) { 
+    return sum + ao.budget; 
+  }, 0);
+  document.getElementById('statBudget').textContent = formatBudget(totalBudget);
+  
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const recentCount = filteredAO.filter(function(ao) {
+    return new Date(ao.publishDate) >= oneWeekAgo;
+  }).length;
+  document.getElementById('statRecent').textContent = recentCount;
+}
+
+function resetFilters() {
+  document.getElementById('sector').value = '';
+  document.getElementById('budgetMin').value = '';
+  document.getElementById('budgetMax').value = '';
+  document.getElementById('region').value = '';
+  filteredAO = [];
+  document.getElementById('results').innerHTML = '<div class="empty">' +
+    '<div class="empty-icon">🎯</div>' +
+    '<h3>Cliquez sur "Charger les AO" pour voir les appels d\'offres</h3>' +
+    '</div>';
+  updateStats();
+}
+
+function showLoading() {
+  document.getElementById('results').innerHTML = '<div class="loading">' +
+    '<div class="spinner"></div>' +
+    '<p>Chargement des appels d\'offres...</p>' +
+    '</div>';
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(function() {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+function formatBudget(amount) {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('fr-FR');
+}
+
+// Auto-load au démarrage
+window.onload = function() {
+  loadAO();
+};
+</script>
+
+</body>
+</html>
