@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AOFinder — Appels d'Offres IT en temps réel</title>
 
-<!-- Même police que ton code -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;swap
+<!-- Police comme ton original -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900p
 
 <style>
-/* ======= TON CSS D’ORIGINE TEL QUEL ======= */
+/* ======= TON CSS D’ORIGINE (inchangé) ======= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root { --bg: #000; --surface: rgba(255,255,255,0.03); --surface-hover: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.06); --text: #f5f5f7; --text2: #a1a1a6; --text3: #6e6e73; --accent: #0071e3; --success: #30d158; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
@@ -79,13 +79,15 @@ select option { background: #1a1a1a; color: var(--text); padding: 10px; }
 </div>
 
 <div class="container">
+  <!-- Filtres (identiques à ton HTML) -->
   <div class="filters">
     <div class="filter-grid">
-      <div class="filter-group"><label for="search">Recherche</label><input type="text" id="search" placeholder="Ex: cloud, cybersécurité..."></div>
-      <div class="filter-group"><label for="min">Budget minimum (€)</label><input type="number" id="min" placeholder="Ex: 50 000"></div>
-      <div class="filter-group"><label for="max">Budget maximum (€)</label><input type="number" id="max" placeholder="Ex: 500 000"></div>
-      <div class="filter-group"><label for="region">Région</label>
-        <select id="region">
+      <div class="filter-group"><label>Recherche</label><input type="text" id="search" placeholder="Ex: cloud, cybersécurité..." oninput="debounceSearch()"></div>
+      <div class="filter-group"><label>Budget minimum (€)</label><input type="number" id="min" placeholder="Ex: 50 000" oninput="debounceSearch()"></div>
+      <div class="filter-group"><label>Budget maximum (€)</label><input type="number" id="max" placeholder="Ex: 500 000" oninput="debounceSearch()"></div>
+      <div class="filter-group"><label>Région</label>
+        <!-- On passe à un filtrage local (plus rapide) -->
+        <select id="region" onchange="debounceSearch()">
           <option value="">Toute la France</option>
           <option value="ile-de-france">Île-de-France</option>
           <option value="grand-est">Grand Est</option>
@@ -94,268 +96,259 @@ select option { background: #1a1a1a; color: var(--text); padding: 10px; }
           <option value="provence-alpes-cote-d-azur">PACA</option>
         </select>
       </div>
-      <div class="filter-group"><label for="sort">Tri</label>
-        <select id="sort">
-          <option value="date_desc">Date de parution (récent → ancien)</option>
-          <option value="budget_desc">Budget (élevé → faible)</option>
-          <option value="budget_asc">Budget (faible → élevé)</option>
-          <option value="deadline_asc">Deadline (proche → lointain)</option>
-        </select>
-      </div>
     </div>
-    <button class="btn" id="resetBtn">Réinitialiser</button>
-    <button class="btn" id="refreshBtn" title="Recharge depuis l'API">Rafraîchir</button>
-    <button class="btn" id="exportBtn">Exporter CSV</button>
+    <button class="btn" onclick="reset()">Réinitialiser</button>
   </div>
 
+  <!-- Stats -->
   <div class="stats">
-    <div class="stat-card"><div class="stat-value" id="tot">-</div><div class="stat-label">Appels d'offres (après filtre)</div></div>
-    <div class="stat-card"><div class="stat-value" id="bud">0 €</div><div class="stat-label">Budget cumulé (après filtre)</div></div>
+    <div class="stat-card"><div class="stat-value" id="tot">-</div><div class="stat-label">Appels d'offres</div></div>
+    <div class="stat-card"><div class="stat-value" id="bud">0 €</div><div class="stat-label">Budget cumulé</div></div>
     <div class="stat-card"><div class="stat-value" id="rec">-</div><div class="stat-label">Dernière mise à jour</div></div>
-    <div class="stat-card"><div class="stat-value" id="totRaw">-</div><div class="stat-label">Total récupéré (brut API)</div></div>
   </div>
 
   <div id="res"></div>
-  <div class="load-more">
-    <button class="btn" id="loadMoreBtn" style="display:none">Charger plus</button>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ========= Config & État =========
+// ===============================
+// API BOAMP (officiel)
+// ===============================
 const API_BASE = 'https://boamp-datadila.opendatasoft.com/api/records/1.0/search/';
-const PER_PAGE = 50;
-const CACHE_TTL_MS = 10 * 60 * 1000;
 
 let allAO = [];
-let filteredAO = [];
 let displayed = 0;
+const PER_PAGE = 50;
 let searchTimeout;
-let lastQuery = '';
 
-// ========= Utils =========
-function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3500); }
-function fmt(n){ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0); }
-function fmtD(d){ if(!d||d==='N/A') return 'N/A'; try{ return new Date(d).toLocaleDateString('fr-FR'); }catch{ return d; } }
-function escapeHTML(s=''){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+// Mapping régions -> codes & noms de départements (pour filtrage local)
+const regionsMap = {
+  'ile-de-france': {
+    codes: ['75','77','78','91','92','93','94','95'],
+    names: ['paris','seine-et-marne','yvelines','essonne','hauts-de-seine','seine-saint-denis','val-de-marne','val-d\'oise','val-d’oise']
+  },
+  'grand-est': {
+    codes: ['08','10','51','52','54','55','57','67','68','88'],
+    names: ['ardennes','aube','marne','haute-marne','meurthe-et-moselle','meuse','moselle','bas-rhin','haut-rhin','vosges']
+  },
+  'auvergne-rhone-alpes': {
+    codes: ['01','03','07','15','26','38','42','43','63','69','73','74'],
+    names: ['ain','allier','ardèche','ardeche','cantal','drôme','drome','isère','isere','loire','haute-loire','puy-de-dôme','puy-de-dome','rhône','rhone','savoie','haute-savoie','haute savoie']
+  },
+  'occitanie': {
+    codes: ['09','11','12','30','31','32','34','46','48','65','66','81','82'],
+    names: ['ariège','ariege','aude','aveyron','gard','haute-garonne','haute garonne','gers','hérault','herault','lot','lozère','lozere','hautes-pyrénées','hautes pyrenees','pyrénées-orientales','pyrenees orientales','tarn','tarn-et-garonne','tarn et garonne']
+  },
+  'provence-alpes-cote-d-azur': {
+    codes: ['04','05','06','13','83','84'],
+    names: ['alpes-de-haute-provence','hautes-alpes','alpes-maritimes','bouches-du-rhône','bouches du rhone','var','vaucluse']
+  }
+};
 
-// Budget robuste
-function extractBudget(fields){
+// ===============================
+// Utils
+// ===============================
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function escapeHTML(str='') {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+}
+
+function fmt(n) {
+  return new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR', maximumFractionDigits: 0}).format(n||0);
+}
+
+function fmtD(d) {
+  if (!d || d === 'N/A') return 'N/A';
+  try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return d; }
+}
+
+function extractBudget(fields) {
   let m = fields.montant ?? fields.valeurestimee ?? fields.montantmarche;
-  if(!m) return 0;
-  if(Array.isArray(m)) m = m[0];
-  if(typeof m==='object') m = m.value ?? m.max ?? m.min ?? 0;
-  if(typeof m==='string') m = m.replace(/[^0-9]/g,'');
-  return parseInt(m)||0;
+  if (!m) return 0;
+  if (Array.isArray(m)) m = m[0];
+  if (typeof m === 'object') m = m.value ?? m.max ?? m.min ?? 0;
+  if (typeof m === 'string') m = m.replace(/[^0-9]/g, '');
+  return parseInt(m) || 0;
 }
-// Description propre
-function extractDescription(fields){
+
+function extractDescription(fields) {
   let d = fields.descriptionlots ?? fields.objetmarche ?? fields.objet ?? '';
-  if(Array.isArray(d)) d = d.join(' ');
-  if(typeof d==='object') d = JSON.stringify(d);
-  d = String(d).replace(/<[^>]*>/g,'');
-  return d.slice(0,200);
+  if (Array.isArray(d)) d = d.join(' ');
+  if (typeof d === 'object') d = JSON.stringify(d);
+  d = String(d).replace(/<[^>]*>/g, ''); // retire HTML
+  return d.slice(0, 200);
 }
-function extractLocation(fields){
+
+function extractLocation(fields) {
   const loc = fields.departement ?? fields.region ?? fields.ville ?? 'France';
   return Array.isArray(loc) ? loc.join(', ') : loc;
 }
-function extractId(fields){ return fields.idweb || fields.reference || fields.id || 'N/A'; }
-function extractUrl(fields){ const id=fields.idweb; return fields.urlannonce || (id ? `https://www.boamp.fr/avis/detail/${id}` : '#'); }
 
-// ========= Cache =========
-function cacheKey(q){ return `aofinder:${q.toLowerCase().trim()}`; }
-function saveCache(q,p){ try{ localStorage.setItem(cacheKey(q), JSON.stringify({t:Date.now(),payload:p})); }catch{} }
-function loadCache(q){ try{ const raw=localStorage.getItem(cacheKey(q)); if(!raw) return null; const {t,payload}=JSON.parse(raw); if(Date.now()-t> CACHE_TTL_MS) return null; return payload; }catch{ return null; } }
-function clearCache(){ try{ Object.keys(localStorage).forEach(k=>{ if(k.startsWith('aofinder:')) localStorage.removeItem(k); }); }catch{} }
-
-// ========= Mapping régions =========
-const regionsMap = {
-  'ile-de-france': { codes:['75','77','78','91','92','93','94','95'], names:['paris','seine-et-marne','yvelines','essonne','hauts-de-seine','seine-saint-denis','val-de-marne','val-d\'oise','val-d’oise'] },
-  'grand-est': { codes:['08','10','51','52','54','55','57','67','68','88'], names:['ardennes','aube','marne','haute-marne','meurthe-et-moselle','meuse','moselle','bas-rhin','haut-rhin','vosges'] },
-  'auvergne-rhone-alpes': { codes:['01','03','07','15','26','38','42','43','63','69','73','74'], names:['ain','allier','ardèche','ardeche','cantal','drôme','drome','isère','isere','loire','haute-loire','puy-de-dôme','puy-de-dome','rhône','rhone','savoie','haute-savoie','haute savoie'] },
-  'occitanie': { codes:['09','11','12','30','31','32','34','46','48','65','66','81','82'], names:['ariège','ariege','aude','aveyron','gard','haute-garonne','haute garonne','gers','hérault','herault','lot','lozère','lozere','hautes-pyrénées','hautes pyrenees','pyrénées-orientales','pyrenees orientales','tarn','tarn-et-garonne','tarn et garonne'] },
-  'provence-alpes-cote-d-azur': { codes:['04','05','06','13','83','84'], names:['alpes-de-haute-provence','hautes-alpes','alpes-maritimes','bouches-du-rhône','bouches du rhone','var','vaucluse'] }
-};
-
-function regionFilterMatch(location, regionKey){
-  if(!regionKey) return true;
-  const r = regionsMap[regionKey]; if(!r) return true;
+function regionFilterMatch(location, regionKey) {
+  if (!regionKey) return true;
+  const r = regionsMap[regionKey];
+  if (!r) return true;
   const loc = String(location||'').toLowerCase();
-  const codeMatch = r.codes.some(code => loc===code || loc.includes(`(${code})`) || loc.includes(code.padStart(2,'0')));
+  const codeMatch = r.codes.some(code => loc === code || loc.includes(`(${code})`) || loc.includes(code));
   const nameMatch = r.names.some(name => loc.includes(name));
   return codeMatch || nameMatch;
 }
 
-// ========= API =========
-async function fetchAO(query){
-  const cached = loadCache(query);
-  if(cached) return cached;
+// ===============================
+// Chargement depuis l’API
+// ===============================
+async function loadAO() {
+  const searchTerm = document.getElementById('search').value.trim();
+  const container = document.getElementById('res');
 
-  const params = new URLSearchParams({
-    dataset:'boamp',
-    q: query || 'informatique OR IT OR cloud OR logiciel OR software',
-    rows:'1000',
-    sort:'dateparution'
-  });
-  ['famillecpv','departement'].forEach(f=>params.append('facet',f));
-  const res = await fetch(`${API_BASE}?${params.toString()}`);
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  if(!data.records) throw new Error('Aucun enregistrement');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div><h3>Chargement des appels d\'offres réels...</h3><p style="margin-top:12px;color:var(--text3);">Récupération depuis l\'API BOAMP officielle</p></div>';
 
-  const items = data.records.map(r=>{
-    const f=r.fields||{};
-    return {
-      id: extractId(f),
-      title: f.objet || 'Sans titre',
-      client: f.denominationsociale || f.nomentite || 'Non spécifié',
-      budget: extractBudget(f),
-      deadline: f.datelimitereponse || 'N/A',
-      location: extractLocation(f),
-      description: extractDescription(f),
-      url: extractUrl(f),
-      source: 'BOAMP',
-      publishDate: f.dateparution || ''
-    };
-  });
-  const payload = { items, total: data.nhits||items.length };
-  saveCache(query, payload);
-  return payload;
-}
+  try {
+    // Construire la requête
+    let query = 'informatique OR IT OR cloud OR logiciel OR software';
+    if (searchTerm) query = searchTerm;
 
-// ========= Filtres / Tri / Pagination =========
-function applyFilters(){
-  const q = (document.getElementById('search').value||'').trim().toLowerCase();
-  const min = parseInt(document.getElementById('min').value)||0;
-  const max = parseInt(document.getElementById('max').value)||Number.MAX_SAFE_INTEGER;
-  const region = document.getElementById('region').value;
-  const sort = document.getElementById('sort').value;
+    const params = new URLSearchParams({ dataset: 'boamp', q: query, rows: '1000', sort: 'dateparution' });
+    // Ajouter les facettes correctement (clé répétée)
+    params.append('facet', 'famillecpv');
+    params.append('facet', 'departement');
 
-  let list = allAO.filter(ao=>{
-    const txt = !q || ao.title.toLowerCase().includes(q) || ao.description.toLowerCase().includes(q);
-    const bud = ao.budget>=min && ao.budget<=max;
-    const reg = regionFilterMatch(ao.location, region);
-    return txt && bud && reg;
-  });
+    const response = await fetch(API_BASE + '?' + params.toString());
+    const data = await response.json();
 
-  list.sort((a,b)=>{
-    switch(sort){
-      case 'budget_desc': return (b.budget||0)-(a.budget||0);
-      case 'budget_asc': return (a.budget||0)-(b.budget||0);
-      case 'deadline_asc': return new Date(a.deadline||'2999-12-31') - new Date(b.deadline||'2999-12-31');
-      case 'date_desc':
-      default: return new Date(b.publishDate||0) - new Date(a.publishDate||0);
+    if (!data.records) {
+      toast('⚠️ Erreur de chargement');
+      return;
     }
-  });
 
-  filteredAO=list; displayed=0; renderList();
-}
+    // Transformer les données BOAMP
+    allAO = data.records.map(record => {
+      const f = record.fields || {};
+      const id = f.idweb || 'N/A';
+      return {
+        id: id,
+        title: f.objet || 'Sans titre',
+        client: f.denominationsociale || f.nomentite || 'Non spécifié',
+        budget: extractBudget(f),
+        deadline: f.datelimitereponse || 'N/A',
+        location: extractLocation(f),
+        description: extractDescription(f),
+        url: f.urlannonce || (id ? `https://www.boamp.fr/avis/detail/${id}` : '#'),
+        source: 'BOAMP',
+        publishDate: f.dateparution || ''
+      };
+    });
 
-function renderList(){
-  const container=document.getElementById('res');
-  const loadMoreBtn=document.getElementById('loadMoreBtn');
+    displayed = 0;
+    displayAO(); // applique filtres locaux + met à jour stats
+    document.getElementById('rec').textContent = new Date().toLocaleDateString('fr-FR');
+    toast(`✓ ${data.nhits?.toLocaleString('fr-FR') || allAO.length} AO trouvés depuis l'API BOAMP`);
 
-  const slice = filteredAO.slice(0, displayed+PER_PAGE);
-  displayed = Math.min(displayed+PER_PAGE, filteredAO.length);
-
-  if(!slice.length){
-    container.innerHTML = '<div style="text-align:center;padding:100px;color:#a1a1a6;"><div style="font-size:80px;margin-bottom:24px;opacity:0.3;">🔍</div><h2>Aucun appel d\'offres trouvé</h2></div>';
-    updateStats();
-    loadMoreBtn.style.display='none';
-    return;
-  }
-
-  let html = '<div class="ao-list">';
-  slice.forEach(ao=>{
-    html += `
-    <div class="ao-card">
-      <div class="ao-header">
-        <div>
-          <div class="ao-title">${escapeHTML(ao.title)}</div>
-          <div class="ao-client">📍 ${escapeHTML(ao.client)}</div>
-        </div>
-        <div class="badge">📡 ${ao.source}</div>
-      </div>
-      <div class="ao-meta">
-        <div class="meta-item"><div class="meta-label">RÉFÉRENCE</div><div class="meta-value">${escapeHTML(ao.id)}</div></div>
-        <div class="meta-item"><div class="meta-label">BUDGET</div><div class="meta-value">${ao.budget>0?fmt(ao.budget):'N/C'}</div></div>
-        <div class="meta-item"><div class="meta-label">DEADLINE</div><div class="meta-value">${fmtD(ao.deadline)}</div></div>
-        <div class="meta-item"><div class="meta-label">LIEU</div><div class="meta-value">${escapeHTML(ao.location)}</div></div>
-      </div>
-      <div class="ao-desc">${escapeHTML(ao.description||'Description non disponible')}</div>
-      ${ao.url}Voir l'annonce complète <span>→</span></a>
-    </div>`;
-  });
-  html += '</div>';
-
-  const remain = filteredAO.length - displayed;
-  if(remain>0){ loadMoreBtn.style.display='inline-block'; loadMoreBtn.textContent=`Charger plus (${remain} restants)`; }
-  else { loadMoreBtn.style.display='none'; }
-
-  container.innerHTML = html;
-  updateStats();
-}
-
-function updateStats(){
-  document.getElementById('tot').textContent = filteredAO.length.toLocaleString('fr-FR');
-  const totalBudget = filteredAO.reduce((s,ao)=>s+(ao.budget||0),0);
-  document.getElementById('bud').textContent = fmt(totalBudget);
-  document.getElementById('rec').textContent = new Date().toLocaleDateString('fr-FR');
-  document.getElementById('totRaw').textContent = (allAO.__totalRaw||allAO.length).toLocaleString('fr-FR');
-}
-
-// ========= Flux principal =========
-function showLoading(){
-  document.getElementById('res').innerHTML = '<div class="loading"><div class="spinner"></div><h3>Chargement des appels d\'offres réels...</h3><p style="margin-top:12px;color:var(--text3);">Récupération depuis l\'API BOAMP officielle</p></div>';
-}
-function debounce(fn,ms=400){ return (...args)=>{ clearTimeout(searchTimeout); searchTimeout=setTimeout(()=>fn(...args),ms); }; }
-
-async function loadAO(force=false){
-  const q = (document.getElementById('search').value||'').trim();
-  if(!force && q===lastQuery && allAO.length){ applyFilters(); return; }
-  showLoading();
-  try{
-    const {items,total} = await fetchAO(q);
-    allAO = items; allAO.__totalRaw = total; lastQuery=q;
-    applyFilters();
-    toast(`✓ ${total.toLocaleString('fr-FR')} AO trouvés depuis l'API BOAMP`);
-  }catch(e){
-    console.error(e);
-    document.getElementById('res').innerHTML = '<div class="loading"><h3>⚠️ Erreur de connexion à l\'API BOAMP</h3><p style="margin-top:12px;color:var(--text3);">Vérifiez votre connexion internet</p></div>';
+  } catch (error) {
+    console.error('Erreur:', error);
+    container.innerHTML = '<div class="loading"><h3>⚠️ Erreur de connexion à l\'API BOAMP</h3><p style="margin-top:12px;color:var(--text3);">Vérifiez votre connexion internet</p></div>';
     toast('⚠️ Impossible de charger les données');
   }
 }
 
-// ========= Écouteurs =========
-document.getElementById('search').addEventListener('input', debounce(()=>loadAO(false),500));
-document.getElementById('min').addEventListener('input', debounce(applyFilters,250));
-document.getElementById('max').addEventListener('input', debounce(applyFilters,250));
-document.getElementById('region').addEventListener('change', applyFilters);
-document.getElementById('sort').addEventListener('change', applyFilters);
+// ===============================
+// Affichage + filtres locaux + pagination
+// ===============================
+function displayAO() {
+  const container = document.getElementById('res');
+  const search = (document.getElementById('search').value || '').toLowerCase().trim();
+  const min = parseInt(document.getElementById('min').value) || 0;
+  const max = parseInt(document.getElementById('max').value) || Number.MAX_SAFE_INTEGER;
+  const region = document.getElementById('region').value;
 
-document.getElementById('resetBtn').addEventListener('click', ()=>{
-  document.getElementById('search').value='';
-  document.getElementById('min').value='';
-  document.getElementById('max').value='';
-  document.getElementById('region').value='';
-  document.getElementById('sort').value='date_desc';
-  loadAO(false);
-});
-document.getElementById('refreshBtn').addEventListener('click', ()=>{ clearCache(); loadAO(true); });
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-  if(!filteredAO.length){ toast('Aucun résultat à exporter'); return; }
-  const headers=['id','title','client','budget','deadline','location','publishDate','url','source'];
-  const rows=filteredAO.map(o=>headers.map(h=>`"${(o[h]??'').toString().replace(/"/g,'""')}"`).join(','));
-  const csv=[headers.join(','),...rows].join('\n');
-  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=`aofinder_${new Date().toISOString().slice(0,10)}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-});
-document.getElementById('loadMoreBtn').addEventListener('click', ()=> renderList());
+  // Filtrer localement
+  let filtered = allAO.filter(ao => {
+    const inText = !search || ao.title.toLowerCase().includes(search) || ao.description.toLowerCase().includes(search);
+    const inBudget = ao.budget >= min && ao.budget <= max;
+    const inRegion = regionFilterMatch(ao.location, region);
+    return inText && inBudget && inRegion;
+  });
 
-window.addEventListener('load', ()=> loadAO(false));
+  // Pagination
+  const toShow = filtered.slice(0, displayed + PER_PAGE);
+  displayed += PER_PAGE;
+
+  if (!toShow.length) {
+    container.innerHTML = '<div style="text-align:center;padding:100px;color:#a1a1a6;"><div style="font-size:80px;margin-bottom:24px;opacity:0.3;">🔍</div><h2>Aucun appel d\'offres trouvé</h2></div>';
+    // Stats (0)
+    document.getElementById('tot').textContent = '0';
+    document.getElementById('bud').textContent = fmt(0);
+    return;
+  }
+
+  // Rendu
+  let html = '<div class="ao-list">';
+  toShow.forEach(ao => {
+    html += `
+      <div class="ao-card">
+        <div class="ao-header">
+          <div>
+            <div class="ao-title">${escapeHTML(ao.title)}</div>
+            <div class="ao-client">📍 ${escapeHTML(ao.client)}</div>
+          </div>
+          <div class="badge">📡 ${ao.source}</div>
+        </div>
+        <div class="ao-meta">
+          <div class="meta-item"><div class="meta-label">RÉFÉRENCE</div><div class="meta-value">${escapeHTML(ao.id)}</div></div>
+          <div class="meta-item"><div class="meta-label">BUDGET</div><div class="meta-value">${ao.budget > 0 ? fmt(ao.budget) : 'N/C'}</div></div>
+          <div class="meta-item"><div class="meta-label">DEADLINE</div><div class="meta-value">${fmtD(ao.deadline)}</div></div>
+          <div class="meta-item"><div class="meta-label">LIEU</div><div class="meta-value">${escapeHTML(ao.location)}</div></div>
+        </div>
+        <div class="ao-desc">${escapeHTML(ao.description || 'Description non disponible')}</div>
+        ${ao.url}Voir l'annonce complète <span>→</span></a>
+      </div>`;
+  });
+  html += '</div>';
+
+  // Bouton "Charger plus"
+  if (displayed < filtered.length) {
+    html += `<div class="load-more"><button class="btn" onclick="displayAO()">Charger plus (${filtered.length - displayed} restants)</button></div>`;
+  }
+
+  container.innerHTML = html;
+
+  // Stats basées sur la liste filtrée complète
+  const totalBudget = filtered.reduce((sum, ao) => sum + (ao.budget || 0), 0);
+  document.getElementById('tot').textContent = filtered.length.toLocaleString('fr-FR');
+  document.getElementById('bud').textContent = fmt(totalBudget);
+}
+
+function debounceSearch() {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    displayed = 0;
+    displayAO();
+  }, 400);
+}
+
+function reset() {
+  document.getElementById('search').value = '';
+  document.getElementById('min').value = '';
+  document.getElementById('max').value = '';
+  document.getElementById('region').value = '';
+  loadAO();
+}
+
+// Chargement au démarrage
+window.onload = () => loadAO();
 </script>
 </body>
 </html>
