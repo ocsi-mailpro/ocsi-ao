@@ -4,12 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AOFinder — Appels d'Offres IT en temps réel</title>
-
-<!-- Police comme ton original -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900p
-
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ======= TON CSS D’ORIGINE (inchangé) ======= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root { --bg: #000; --surface: rgba(255,255,255,0.03); --surface-hover: rgba(255,255,255,0.06); --border: rgba(255,255,255,0.06); --text: #f5f5f7; --text2: #a1a1a6; --text3: #6e6e73; --accent: #0071e3; --success: #30d158; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
@@ -71,192 +67,96 @@ select option { background: #1a1a1a; color: var(--text); padding: 10px; }
 </head>
 <body>
 <div class="bg-gradient"></div>
-
 <div class="hero">
-  <h1>AOFinder</h1>
-  <p>Tous les appels d'offres informatique en temps réel</p>
-  <div class="sources-badge"><div class="live"></div><span>API BOAMP Officielle · Données gouvernementales</span></div>
+<h1>AOFinder</h1>
+<p>Tous les appels d'offres informatique en temps réel</p>
+<div class="sources-badge"><div class="live"></div><span>API BOAMP Officielle · Données gouvernementales</span></div>
 </div>
-
 <div class="container">
-  <!-- Filtres (identiques à ton HTML) -->
-  <div class="filters">
-    <div class="filter-grid">
-      <div class="filter-group"><label>Recherche</label><input type="text" id="search" placeholder="Ex: cloud, cybersécurité..." oninput="debounceSearch()"></div>
-      <div class="filter-group"><label>Budget minimum (€)</label><input type="number" id="min" placeholder="Ex: 50 000" oninput="debounceSearch()"></div>
-      <div class="filter-group"><label>Budget maximum (€)</label><input type="number" id="max" placeholder="Ex: 500 000" oninput="debounceSearch()"></div>
-      <div class="filter-group"><label>Région</label>
-        <!-- On passe à un filtrage local (plus rapide) -->
-        <select id="region" onchange="debounceSearch()">
-          <option value="">Toute la France</option>
-          <option value="ile-de-france">Île-de-France</option>
-          <option value="grand-est">Grand Est</option>
-          <option value="auvergne-rhone-alpes">Auvergne-Rhône-Alpes</option>
-          <option value="occitanie">Occitanie</option>
-          <option value="provence-alpes-cote-d-azur">PACA</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn" onclick="reset()">Réinitialiser</button>
-  </div>
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat-card"><div class="stat-value" id="tot">-</div><div class="stat-label">Appels d'offres</div></div>
-    <div class="stat-card"><div class="stat-value" id="bud">0 €</div><div class="stat-label">Budget cumulé</div></div>
-    <div class="stat-card"><div class="stat-value" id="rec">-</div><div class="stat-label">Dernière mise à jour</div></div>
-  </div>
-
-  <div id="res"></div>
+<div class="filters">
+<div class="filter-grid">
+<div class="filter-group"><label>Recherche</label><input type="text" id="search" placeholder="Ex: cloud, cybersécurité..." oninput="debounceSearch()"></div>
+<div class="filter-group"><label>Budget minimum (€)</label><input type="number" id="min" placeholder="Ex: 50 000 €" oninput="debounceSearch()"></div>
+<div class="filter-group"><label>Budget maximum (€)</label><input type="number" id="max" placeholder="Ex: 500 000 €" oninput="debounceSearch()"></div>
+<div class="filter-group"><label>Région</label>
+<select id="region" onchange="loadAO()">
+<option value="">Toute la France</option>
+<option value="ile-de-france">Île-de-France</option>
+<option value="grand-est">Grand Est</option>
+<option value="auvergne">Auvergne-Rhône-Alpes</option>
+<option value="occitanie">Occitanie</option>
+<option value="paca">PACA</option>
+</select></div>
 </div>
-
+<button class="btn" onclick="reset()">Réinitialiser</button>
+</div>
+<div class="stats">
+<div class="stat-card"><div class="stat-value" id="tot">-</div><div class="stat-label">Appels d'offres</div></div>
+<div class="stat-card"><div class="stat-value" id="bud">0 €</div><div class="stat-label">Budget cumulé</div></div>
+<div class="stat-card"><div class="stat-value" id="rec">-</div><div class="stat-label">Dernière mise à jour</div></div>
+</div>
+<div id="res"></div>
+</div>
 <div class="toast" id="toast"></div>
-
 <script>
-// ===============================
-// API BOAMP (officiel)
-// ===============================
+// API BOAMP OFFICIELLE
 const API_BASE = 'https://boamp-datadila.opendatasoft.com/api/records/1.0/search/';
-
 let allAO = [];
 let displayed = 0;
 const PER_PAGE = 50;
 let searchTimeout;
 
-// Mapping régions -> codes & noms de départements (pour filtrage local)
-const regionsMap = {
-  'ile-de-france': {
-    codes: ['75','77','78','91','92','93','94','95'],
-    names: ['paris','seine-et-marne','yvelines','essonne','hauts-de-seine','seine-saint-denis','val-de-marne','val-d\'oise','val-d’oise']
-  },
-  'grand-est': {
-    codes: ['08','10','51','52','54','55','57','67','68','88'],
-    names: ['ardennes','aube','marne','haute-marne','meurthe-et-moselle','meuse','moselle','bas-rhin','haut-rhin','vosges']
-  },
-  'auvergne-rhone-alpes': {
-    codes: ['01','03','07','15','26','38','42','43','63','69','73','74'],
-    names: ['ain','allier','ardèche','ardeche','cantal','drôme','drome','isère','isere','loire','haute-loire','puy-de-dôme','puy-de-dome','rhône','rhone','savoie','haute-savoie','haute savoie']
-  },
-  'occitanie': {
-    codes: ['09','11','12','30','31','32','34','46','48','65','66','81','82'],
-    names: ['ariège','ariege','aude','aveyron','gard','haute-garonne','haute garonne','gers','hérault','herault','lot','lozère','lozere','hautes-pyrénées','hautes pyrenees','pyrénées-orientales','pyrenees orientales','tarn','tarn-et-garonne','tarn et garonne']
-  },
-  'provence-alpes-cote-d-azur': {
-    codes: ['04','05','06','13','83','84'],
-    names: ['alpes-de-haute-provence','hautes-alpes','alpes-maritimes','bouches-du-rhône','bouches du rhone','var','vaucluse']
-  }
-};
-
-// ===============================
-// Utils
-// ===============================
-function toast(m) {
-  const t = document.getElementById('toast');
-  t.textContent = m;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3500);
-}
-
-function escapeHTML(str='') {
-  return String(str)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;')
-    .replace(/'/g,'&#039;');
-}
-
-function fmt(n) {
-  return new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR', maximumFractionDigits: 0}).format(n||0);
-}
-
-function fmtD(d) {
-  if (!d || d === 'N/A') return 'N/A';
-  try { return new Date(d).toLocaleDateString('fr-FR'); } catch { return d; }
-}
-
-function extractBudget(fields) {
-  let m = fields.montant ?? fields.valeurestimee ?? fields.montantmarche;
-  if (!m) return 0;
-  if (Array.isArray(m)) m = m[0];
-  if (typeof m === 'object') m = m.value ?? m.max ?? m.min ?? 0;
-  if (typeof m === 'string') m = m.replace(/[^0-9]/g, '');
-  return parseInt(m) || 0;
-}
-
-function extractDescription(fields) {
-  let d = fields.descriptionlots ?? fields.objetmarche ?? fields.objet ?? '';
-  if (Array.isArray(d)) d = d.join(' ');
-  if (typeof d === 'object') d = JSON.stringify(d);
-  d = String(d).replace(/<[^>]*>/g, ''); // retire HTML
-  return d.slice(0, 200);
-}
-
-function extractLocation(fields) {
-  const loc = fields.departement ?? fields.region ?? fields.ville ?? 'France';
-  return Array.isArray(loc) ? loc.join(', ') : loc;
-}
-
-function regionFilterMatch(location, regionKey) {
-  if (!regionKey) return true;
-  const r = regionsMap[regionKey];
-  if (!r) return true;
-  const loc = String(location||'').toLowerCase();
-  const codeMatch = r.codes.some(code => loc === code || loc.includes(`(${code})`) || loc.includes(code));
-  const nameMatch = r.names.some(name => loc.includes(name));
-  return codeMatch || nameMatch;
-}
-
-// ===============================
-// Chargement depuis l’API
-// ===============================
 async function loadAO() {
-  const searchTerm = document.getElementById('search').value.trim();
+  const searchTerm = document.getElementById('search').value;
   const container = document.getElementById('res');
-
+  
   container.innerHTML = '<div class="loading"><div class="spinner"></div><h3>Chargement des appels d\'offres réels...</h3><p style="margin-top:12px;color:var(--text3);">Récupération depuis l\'API BOAMP officielle</p></div>';
-
+  
   try {
     // Construire la requête
     let query = 'informatique OR IT OR cloud OR logiciel OR software';
-    if (searchTerm) query = searchTerm;
-
-    const params = new URLSearchParams({ dataset: 'boamp', q: query, rows: '1000', sort: 'dateparution' });
-    // Ajouter les facettes correctement (clé répétée)
-    params.append('facet', 'famillecpv');
-    params.append('facet', 'departement');
-
-    const response = await fetch(API_BASE + '?' + params.toString());
+    if (searchTerm) {
+      query = searchTerm;
+    }
+    
+    const params = new URLSearchParams({
+      dataset: 'boamp',
+      q: query,
+      rows: 1000, // Max 1000 par requête
+      sort: 'dateparution',
+      facet: ['famillecpv', 'departement']
+    });
+    
+    const response = await fetch(API_BASE + '?' + params);
     const data = await response.json();
-
+    
     if (!data.records) {
       toast('⚠️ Erreur de chargement');
       return;
     }
-
+    
     // Transformer les données BOAMP
     allAO = data.records.map(record => {
-      const f = record.fields || {};
-      const id = f.idweb || 'N/A';
+      const fields = record.fields;
       return {
-        id: id,
-        title: f.objet || 'Sans titre',
-        client: f.denominationsociale || f.nomentite || 'Non spécifié',
-        budget: extractBudget(f),
-        deadline: f.datelimitereponse || 'N/A',
-        location: extractLocation(f),
-        description: extractDescription(f),
-        url: f.urlannonce || (id ? `https://www.boamp.fr/avis/detail/${id}` : '#'),
+        id: fields.idweb || 'N/A',
+        title: fields.objet || 'Sans titre',
+        client: fields.denominationsociale || fields.nomentite || 'Non spécifié',
+        budget: extractBudget(fields),
+        deadline: fields.datelimitereponse || 'N/A',
+        location: fields.departement || 'France',
+        description: (fields.descriptionlots || fields.objetmarche || '').substring(0, 200),
+        url: fields.urlannonce || `https://www.boamp.fr/avis/detail/${fields.idweb}`,
         source: 'BOAMP',
-        publishDate: f.dateparution || ''
+        publishDate: fields.dateparution || ''
       };
     });
-
+    
     displayed = 0;
-    displayAO(); // applique filtres locaux + met à jour stats
-    document.getElementById('rec').textContent = new Date().toLocaleDateString('fr-FR');
-    toast(`✓ ${data.nhits?.toLocaleString('fr-FR') || allAO.length} AO trouvés depuis l'API BOAMP`);
-
+    displayAO();
+    updateStats(data.nhits);
+    toast(`✓ ${data.nhits.toLocaleString('fr-FR')} AO trouvés depuis l'API BOAMP`);
+    
   } catch (error) {
     console.error('Erreur:', error);
     container.innerHTML = '<div class="loading"><h3>⚠️ Erreur de connexion à l\'API BOAMP</h3><p style="margin-top:12px;color:var(--text3);">Vérifiez votre connexion internet</p></div>';
@@ -264,71 +164,73 @@ async function loadAO() {
   }
 }
 
-// ===============================
-// Affichage + filtres locaux + pagination
-// ===============================
+function extractBudget(fields) {
+  // Essayer différents champs de budget
+  const montant = fields.montant || fields.valeurestimee || fields.montantmarche || 0;
+  if (typeof montant === 'string') {
+    return parseInt(montant.replace(/[^0-9]/g, '')) || 0;
+  }
+  return parseInt(montant) || 0;
+}
+
 function displayAO() {
   const container = document.getElementById('res');
-  const search = (document.getElementById('search').value || '').toLowerCase().trim();
+  const search = document.getElementById('search').value.toLowerCase();
   const min = parseInt(document.getElementById('min').value) || 0;
-  const max = parseInt(document.getElementById('max').value) || Number.MAX_SAFE_INTEGER;
-  const region = document.getElementById('region').value;
-
-  // Filtrer localement
+  const max = parseInt(document.getElementById('max').value) || 999999999;
+  
+  // Filtrer
   let filtered = allAO.filter(ao => {
-    const inText = !search || ao.title.toLowerCase().includes(search) || ao.description.toLowerCase().includes(search);
-    const inBudget = ao.budget >= min && ao.budget <= max;
-    const inRegion = regionFilterMatch(ao.location, region);
-    return inText && inBudget && inRegion;
+    if (search && !ao.title.toLowerCase().includes(search) && !ao.description.toLowerCase().includes(search)) return false;
+    if (ao.budget < min || ao.budget > max) return false;
+    return true;
   });
-
-  // Pagination
+  
+  // Afficher les premiers résultats
   const toShow = filtered.slice(0, displayed + PER_PAGE);
   displayed += PER_PAGE;
-
+  
   if (!toShow.length) {
     container.innerHTML = '<div style="text-align:center;padding:100px;color:#a1a1a6;"><div style="font-size:80px;margin-bottom:24px;opacity:0.3;">🔍</div><h2>Aucun appel d\'offres trouvé</h2></div>';
-    // Stats (0)
-    document.getElementById('tot').textContent = '0';
-    document.getElementById('bud').textContent = fmt(0);
     return;
   }
-
-  // Rendu
+  
   let html = '<div class="ao-list">';
   toShow.forEach(ao => {
-    html += `
-      <div class="ao-card">
-        <div class="ao-header">
-          <div>
-            <div class="ao-title">${escapeHTML(ao.title)}</div>
-            <div class="ao-client">📍 ${escapeHTML(ao.client)}</div>
-          </div>
-          <div class="badge">📡 ${ao.source}</div>
+    html += `<div class="ao-card">
+      <div class="ao-header">
+        <div>
+          <div class="ao-title">${ao.title}</div>
+          <div class="ao-client">📍 ${ao.client}</div>
         </div>
-        <div class="ao-meta">
-          <div class="meta-item"><div class="meta-label">RÉFÉRENCE</div><div class="meta-value">${escapeHTML(ao.id)}</div></div>
-          <div class="meta-item"><div class="meta-label">BUDGET</div><div class="meta-value">${ao.budget > 0 ? fmt(ao.budget) : 'N/C'}</div></div>
-          <div class="meta-item"><div class="meta-label">DEADLINE</div><div class="meta-value">${fmtD(ao.deadline)}</div></div>
-          <div class="meta-item"><div class="meta-label">LIEU</div><div class="meta-value">${escapeHTML(ao.location)}</div></div>
-        </div>
-        <div class="ao-desc">${escapeHTML(ao.description || 'Description non disponible')}</div>
-        ${ao.url}Voir l'annonce complète <span>→</span></a>
-      </div>`;
+        <div class="badge">📡 ${ao.source}</div>
+      </div>
+      <div class="ao-meta">
+        <div class="meta-item"><div class="meta-label">RÉFÉRENCE</div><div class="meta-value">${ao.id}</div></div>
+        <div class="meta-item"><div class="meta-label">BUDGET</div><div class="meta-value">${ao.budget > 0 ? fmt(ao.budget) : 'N/C'}</div></div>
+        <div class="meta-item"><div class="meta-label">DEADLINE</div><div class="meta-value">${fmtD(ao.deadline)}</div></div>
+        <div class="meta-item"><div class="meta-label">LIEU</div><div class="meta-value">${ao.location}</div></div>
+      </div>
+      <div class="ao-desc">${ao.description || 'Description non disponible'}</div>
+      <a href="${ao.url}" target="_blank" class="ao-link">Voir l'annonce complète <span>→</span></a>
+    </div>`;
   });
   html += '</div>';
-
-  // Bouton "Charger plus"
+  
+  // Bouton charger plus
   if (displayed < filtered.length) {
     html += `<div class="load-more"><button class="btn" onclick="displayAO()">Charger plus (${filtered.length - displayed} restants)</button></div>`;
   }
-
+  
   container.innerHTML = html;
-
-  // Stats basées sur la liste filtrée complète
-  const totalBudget = filtered.reduce((sum, ao) => sum + (ao.budget || 0), 0);
   document.getElementById('tot').textContent = filtered.length.toLocaleString('fr-FR');
+}
+
+function updateStats(total) {
+  document.getElementById('tot').textContent = total.toLocaleString('fr-FR');
+  const totalBudget = allAO.reduce((sum, ao) => sum + ao.budget, 0);
   document.getElementById('bud').textContent = fmt(totalBudget);
+  document.getElementById('rec').textContent = new Date().toLocaleDateString('fr-FR');
 }
 
 function debounceSearch() {
@@ -336,7 +238,7 @@ function debounceSearch() {
   searchTimeout = setTimeout(() => {
     displayed = 0;
     displayAO();
-  }, 400);
+  }, 500);
 }
 
 function reset() {
@@ -347,8 +249,28 @@ function reset() {
   loadAO();
 }
 
-// Chargement au démarrage
+function fmt(n) {
+  return new Intl.NumberFormat('fr-FR', {style: 'currency', currency: 'EUR', maximumFractionDigits: 0}).format(n);
+}
+
+function fmtD(d) {
+  if (!d || d === 'N/A') return 'N/A';
+  try {
+    return new Date(d).toLocaleDateString('fr-FR');
+  } catch {
+    return d;
+  }
+}
+
+function toast(m) {
+  const t = document.getElementById('toast');
+  t.textContent = m;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+// Chargement automatique au démarrage
 window.onload = () => loadAO();
 </script>
 </body>
-</html>
+</html> 
